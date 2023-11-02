@@ -281,25 +281,30 @@ const reply = async (email, unix_start_date, unix_end_date, access_token) => {
         return;
     }
 
+    for(let i=0; i<response["data"]["resultSizeEstimate"]; i++) {
+        let msg_id = response["data"]["messages"][i]["id"];
+        let thread_id = response["data"]["messages"][i]["threadId"];
+        
+        // let msg_id = response["data"]["messages"][0]["id"];
+        // let thread_id = response["data"]["messages"][0]["threadId"];
+
+        console.log('ids', msg_id, thread_id);
+
+        let { from_mail, subject } = await getMessage_promise(email, msg_id, thread_id);
+        console.log('from_mail', from_mail);
+        console.log('sub', subject);
+
+        if (!replied_threads.has(thread_id)) {
+            sendMail(email, from_mail, subject, thread_id);
+        }
+        else {
+            console.log('already replied, ignoring');
+        }
+
+        await updateLable_promise(email, msg_id);
+        replied_threads.add(thread_id);
+    }
     
-    let msg_id = response["data"]["messages"][0]["id"];
-    let thread_id = response["data"]["messages"][0]["threadId"];
-
-    console.log('ids', msg_id, thread_id);
-
-    let { from_mail, subject } = await getMessage_promise(email, msg_id, thread_id);
-    console.log('from_mail', from_mail);
-    console.log('sub', subject);
-
-    if (!replied_threads.has(thread_id)) {
-        sendMail(email, from_mail, subject, thread_id);
-    }
-    else {
-        console.log('already replied, ignoring');
-    }
-
-    await updateLable_promise(email, msg_id);
-    replied_threads.add(thread_id);
 }
 
 const interval = setInterval(async () => {
